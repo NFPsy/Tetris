@@ -26,6 +26,10 @@ public class Piece : MonoBehaviour
         {
             Move(Vector2Int.right);
         }
+        else if (keyboard.upArrowKey.wasPressedThisFrame)
+        {
+            Rotate();
+        }
     }
 
     public void Initialize(Board targetBoard, TetrominoType tetrominoType, Vector2Int spawnPosition)
@@ -77,8 +81,40 @@ public class Piece : MonoBehaviour
         return true;
     }
 
+    public bool Rotate()
+    {
+        if (type == TetrominoType.O)
+        {
+            return true;
+        }
+
+        Vector2Int[] rotatedCells = new Vector2Int[cells.Length];
+        for (int i = 0; i < cells.Length; i++)
+        {
+            Vector2Int cell = cells[i];
+            rotatedCells[i] = new Vector2Int(cell.y, -cell.x);
+        }
+
+        if (!IsValidPosition(rotatedCells, position))
+        {
+            return false;
+        }
+
+        cells = rotatedCells;
+        UpdateBlockShapes();
+        return true;
+    }
+
     private void UpdatePosition()
     {
         transform.position = board.transform.position + new Vector3(position.x, position.y, 0);
+    }
+
+    private void UpdateBlockShapes()
+    {
+        for (int i = 0; i < cells.Length; i++)
+        {
+            blockRenderers[i].transform.localPosition = new Vector3(cells[i].x, cells[i].y, 0);
+        }
     }
 }
