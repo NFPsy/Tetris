@@ -33,10 +33,25 @@ public class GameManager : MonoBehaviour
 
     private void StepDown()
     {
-        if (activePiece != null)
+        if (activePiece == null)
         {
-            activePiece.Move(Vector2Int.down);
+            return;
         }
+
+        if (!activePiece.Move(Vector2Int.down))
+        {
+            LockPiece(activePiece);
+            SpawnPiece();
+        }
+    }
+
+    private void LockPiece(Piece piece)
+    {
+        foreach (Vector2Int cell in piece.GetAbsoluteCells())
+        {
+            board.SetCell(cell.x, cell.y, true);
+        }
+        piece.enabled = false;
     }
 
     private void SpawnPiece()

@@ -105,6 +105,16 @@ public class Piece : MonoBehaviour
         return true;
     }
 
+    public Vector2Int[] GetAbsoluteCells()
+    {
+        Vector2Int[] absolute = new Vector2Int[cells.Length];
+        for (int i = 0; i < cells.Length; i++)
+        {
+            absolute[i] = position + cells[i];
+        }
+        return absolute;
+    }
+
     private void UpdatePosition()
     {
         transform.position = board.transform.position + new Vector3(position.x, position.y, 0);
