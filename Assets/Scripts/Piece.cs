@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Piece : MonoBehaviour
 {
@@ -8,6 +9,24 @@ public class Piece : MonoBehaviour
 
     private Vector2Int[] cells;
     private SpriteRenderer[] blockRenderers;
+
+    private void Update()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
+        {
+            return;
+        }
+
+        if (keyboard.leftArrowKey.wasPressedThisFrame)
+        {
+            Move(Vector2Int.left);
+        }
+        else if (keyboard.rightArrowKey.wasPressedThisFrame)
+        {
+            Move(Vector2Int.right);
+        }
+    }
 
     public void Initialize(Board targetBoard, TetrominoType tetrominoType, Vector2Int spawnPosition)
     {
