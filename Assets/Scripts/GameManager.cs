@@ -41,17 +41,19 @@ public class GameManager : MonoBehaviour
         if (!activePiece.Move(Vector2Int.down))
         {
             LockPiece(activePiece);
+            board.ClearFullLines();
             SpawnPiece();
         }
     }
 
     private void LockPiece(Piece piece)
     {
+        Color color = TetrominoShapes.GetColor(piece.type);
         foreach (Vector2Int cell in piece.GetAbsoluteCells())
         {
-            board.SetCell(cell.x, cell.y, true);
+            board.SetCell(cell.x, cell.y, true, color);
         }
-        piece.enabled = false;
+        Destroy(piece.gameObject);
     }
 
     private void SpawnPiece()
