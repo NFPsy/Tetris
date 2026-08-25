@@ -6,8 +6,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private float fallInterval = 1f;
 
+    public event System.Action<int> OnGameOver;
+
     private Piece activePiece;
     private float fallTimer;
+    private bool isGameOver;
 
     private void Awake()
     {
@@ -28,6 +31,11 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (isGameOver)
+        {
+            return;
+        }
+
         fallTimer += Time.deltaTime;
         if (fallTimer >= fallInterval)
         {
@@ -71,8 +79,26 @@ public class GameManager : MonoBehaviour
         TetrominoType type = (TetrominoType)Random.Range(0, typeCount);
         Vector2Int spawnPosition = new Vector2Int(Board.Width / 2 - 1, Board.Height - 2);
 
+        foreach (Vector2Int cell in TetrominoShapes.GetCells(type))
+        {
+            int x = spawnPosition.x + cell.x;
+            int y = spawnPosition.y + cell.y;
+            if (board.IsCellFilled(x, y))
+            {
+                GameOver();
+                return;
+            }
+        }
+
         GameObject pieceObject = new GameObject("Piece");
         activePiece = pieceObject.AddComponent<Piece>();
         activePiece.Initialize(board, type, spawnPosition);
+    }
+
+    private void GameOver()
+    {
+        isGameOver = true;
+        activePiece = null;
+        OnGameOver?.Invoke(scoreManager.Score);
     }
 }
