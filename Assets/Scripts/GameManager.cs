@@ -3,6 +3,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private Board board;
+    [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private float fallInterval = 1f;
 
     private Piece activePiece;
@@ -13,6 +14,10 @@ public class GameManager : MonoBehaviour
         if (board == null)
         {
             board = FindFirstObjectByType<Board>();
+        }
+        if (scoreManager == null)
+        {
+            scoreManager = GetComponent<ScoreManager>();
         }
     }
 
@@ -41,7 +46,11 @@ public class GameManager : MonoBehaviour
         if (!activePiece.Move(Vector2Int.down))
         {
             LockPiece(activePiece);
-            board.ClearFullLines();
+            int clearedLines = board.ClearFullLines();
+            if (clearedLines > 0)
+            {
+                scoreManager.AddLines(clearedLines);
+            }
             SpawnPiece();
         }
     }
