@@ -5,7 +5,10 @@ using TMPro;
 public class ScoreManager : MonoBehaviour
 {
     private const int LinesPerLevel = 10; // 이 줄 수만큼 지울 때마다 레벨이 1 오름
-    private const string HighScoreKey = "TetrisHighScore"; // PlayerPrefs에 최고점수를 저장할 때 쓰는 이름표
+
+    // 실행 중(게임을 켜둔 동안)에만 유지되는 최고점수입니다. static이라 씬을 재시작해도
+    // 값이 남아있지만, 게임을 완전히 껐다 켜면(=프로세스가 새로 시작되면) 0으로 초기화됩니다.
+    private static int sessionHighScore;
 
     // NES(고전) 테트리스 점수 테이블입니다. 인덱스가 한 번에 지운 줄 수를 의미합니다.
     // 예: 한 번에 4줄(테트리스)을 지우면 1줄씩 4번 지우는 것보다 훨씬 많은 점수를 줍니다.
@@ -24,9 +27,7 @@ public class ScoreManager : MonoBehaviour
 
     private void Awake()
     {
-        // PlayerPrefs는 게임을 껐다 켜도, 씬을 재시작해도 값이 그대로 남아있는 저장소입니다.
-        // 저장된 최고점수가 없으면 0을 기본값으로 사용합니다.
-        HighScore = PlayerPrefs.GetInt(HighScoreKey, 0);
+        HighScore = sessionHighScore;
         UpdateDisplay();
     }
 
@@ -42,11 +43,11 @@ public class ScoreManager : MonoBehaviour
         totalLinesCleared += lineCount;
         Level = 1 + totalLinesCleared / LinesPerLevel; // 10줄마다 레벨 +1
 
-        // 현재 점수가 최고점수를 넘었으면 즉시 갱신하고 저장합니다.
+        // 현재 점수가 최고점수를 넘었으면 즉시 갱신합니다.
         if (Score > HighScore)
         {
             HighScore = Score;
-            PlayerPrefs.SetInt(HighScoreKey, HighScore);
+            sessionHighScore = HighScore;
         }
 
         UpdateDisplay();
