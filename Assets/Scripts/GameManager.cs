@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -6,6 +7,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private NextPiecePreview nextPiecePreview;
     [SerializeField] private float fallInterval = 1f;
+    [SerializeField] private float softDropInterval = 0.05f;
 
     public event System.Action<int> OnGameOver;
 
@@ -45,8 +47,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        bool softDrop = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+        float interval = softDrop ? softDropInterval : fallInterval;
+
         fallTimer += Time.deltaTime;
-        if (fallTimer >= fallInterval)
+        if (fallTimer >= interval)
         {
             fallTimer = 0f;
             StepDown();
