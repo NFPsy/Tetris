@@ -8,6 +8,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private NextPiecePreview nextPiecePreview;
     [SerializeField] private float fallInterval = 1f;
     [SerializeField] private float softDropInterval = 0.05f;
+    [SerializeField] private float levelSpeedDecay = 0.92f;
+    [SerializeField] private float minFallInterval = 0.1f;
 
     public event System.Action<int> OnGameOver;
 
@@ -47,8 +49,9 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        float currentFallInterval = Mathf.Max(minFallInterval, fallInterval * Mathf.Pow(levelSpeedDecay, scoreManager.Level - 1));
         bool softDrop = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
-        float interval = softDrop ? softDropInterval : fallInterval;
+        float interval = softDrop ? softDropInterval : currentFallInterval;
 
         fallTimer += Time.deltaTime;
         if (fallTimer >= interval)
