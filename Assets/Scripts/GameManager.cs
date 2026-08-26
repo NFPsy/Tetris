@@ -4,11 +4,13 @@ public class GameManager : MonoBehaviour
 {
     [SerializeField] private Board board;
     [SerializeField] private ScoreManager scoreManager;
+    [SerializeField] private NextPiecePreview nextPiecePreview;
     [SerializeField] private float fallInterval = 1f;
 
     public event System.Action<int> OnGameOver;
 
     private Piece activePiece;
+    private TetrominoType nextType;
     private float fallTimer;
     private bool isGameOver;
 
@@ -26,7 +28,14 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        nextType = GetRandomType();
         SpawnPiece();
+    }
+
+    private static TetrominoType GetRandomType()
+    {
+        int typeCount = System.Enum.GetValues(typeof(TetrominoType)).Length;
+        return (TetrominoType)Random.Range(0, typeCount);
     }
 
     private void Update()
@@ -75,8 +84,13 @@ public class GameManager : MonoBehaviour
 
     private void SpawnPiece()
     {
-        int typeCount = System.Enum.GetValues(typeof(TetrominoType)).Length;
-        TetrominoType type = (TetrominoType)Random.Range(0, typeCount);
+        TetrominoType type = nextType;
+        nextType = GetRandomType();
+        if (nextPiecePreview != null)
+        {
+            nextPiecePreview.Show(nextType);
+        }
+
         Vector2Int spawnPosition = new Vector2Int(Board.Width / 2 - 1, Board.Height - 2);
 
         foreach (Vector2Int cell in TetrominoShapes.GetCells(type))

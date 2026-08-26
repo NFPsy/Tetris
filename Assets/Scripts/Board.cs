@@ -8,6 +8,32 @@ public class Board : MonoBehaviour
     private bool[,] cells = new bool[Width, Height];
     private SpriteRenderer[,] blockVisuals = new SpriteRenderer[Width, Height];
 
+    private void Awake()
+    {
+        DrawBorder();
+    }
+
+    private void DrawBorder()
+    {
+        GameObject borderObject = new GameObject("Border");
+        borderObject.transform.SetParent(transform, false);
+
+        LineRenderer line = borderObject.AddComponent<LineRenderer>();
+        line.useWorldSpace = false;
+        line.loop = true;
+        line.positionCount = 4;
+        line.SetPosition(0, new Vector3(-0.5f, -0.5f, 0));
+        line.SetPosition(1, new Vector3(Width - 0.5f, -0.5f, 0));
+        line.SetPosition(2, new Vector3(Width - 0.5f, Height - 0.5f, 0));
+        line.SetPosition(3, new Vector3(-0.5f, Height - 0.5f, 0));
+        line.startWidth = 0.1f;
+        line.endWidth = 0.1f;
+        line.material = new Material(Shader.Find("Sprites/Default"));
+        line.startColor = Color.white;
+        line.endColor = Color.white;
+        line.sortingOrder = 1;
+    }
+
     public bool IsInsideBoard(int x, int y)
     {
         return x >= 0 && x < Width && y >= 0 && y < Height;
