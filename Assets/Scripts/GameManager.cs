@@ -19,10 +19,15 @@ public class GameManager : MonoBehaviour
     // GameOverUI 스크립트가 이 이벤트를 구독해서 결과 화면을 띄웁니다.
     public event System.Action<int> OnGameOver;
 
+    // 일시정지 상태가 바뀔 때(true=일시정지, false=재생) 발생합니다.
+    // PauseUI 스크립트가 이 이벤트를 구독해서 "PAUSE" 문구를 띄우거나 지웁니다.
+    public event System.Action<bool> OnPauseChanged;
+
     private Piece activePiece;      // 지금 떨어지고 있는 블록
     private TetrominoType nextType; // 다음에 나올 블록 종류(미리 뽑아둠 -> 미리보기에 사용)
     private float fallTimer;        // 마지막으로 떨어진 뒤 지난 시간
     private bool isGameOver;
+    private bool isPaused;
 
     private void Awake()
     {
@@ -53,9 +58,11 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (isGameOver)
+        HandlePauseInput();
+
+        if (isGameOver || isPaused)
         {
-            return; // 게임이 끝났으면 더 이상 아무것도 하지 않음
+            return; // 게임이 끝났거나 일시정지 중이면 더 이상 아무것도 하지 않음
         }
 
         // 레벨이 오를수록 낙하 간격이 점점 짧아지도록 계산합니다.
@@ -73,6 +80,32 @@ public class GameManager : MonoBehaviour
             fallTimer = 0f;
             StepDown();
         }
+    }
+
+    // P키를 누를 때마다 일시정지 상태를 전환합니다. 게임오버 후에는 동작하지 않습니다.
+    private void HandlePauseInput()
+    {
+        if (isGameOver)
+        {
+            return;
+        }
+
+        if (Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame)
+        {
+            SetPaused(!isPaused);
+        }
+    }
+
+    // 일시정지 상태를 적용합니다. 낙하 중인 블록의 입력도 함께 멈추거나 재개시킵니다.
+    private void SetPaused(bool paused)
+    {
+        isPaused = paused;
+        if (activePiece != null)
+        {
+            // Piece의 Update()가 멈추도록 컴포넌트 자체를 꺼서 좌우 이동/회전 입력도 함께 막습니다.
+            activePiece.enabled = !paused;
+        }
+        OnPauseChanged?.Invoke(paused);
     }
 
     // 블록을 한 칸 아래로 내려봅니다. 더 내려갈 수 없으면(바닥/다른 블록에 막히면)
