@@ -32,13 +32,19 @@ public class ScoreManager : MonoBehaviour
     }
 
     // 한 번에 lineCount줄을 지웠을 때 호출합니다. 점수를 올리고 레벨을 갱신합니다.
-    public void AddLines(int lineCount)
+    // hasBomb이 true면(지워진 줄 중 폭탄 칸이 있었으면) 이번에 얻는 점수를 2배로 줍니다.
+    public void AddLines(int lineCount, bool hasBomb = false)
     {
         // 혹시 4줄보다 많이 지워지는 경우를 대비해 테이블 범위를 벗어나지 않게 clamp
         int tableIndex = Mathf.Clamp(lineCount, 0, ClassicLineScores.Length - 1);
 
         // 기본 점수에 현재 레벨을 곱해서, 레벨이 높을수록 더 큰 점수를 받게 합니다.
-        Score += ClassicLineScores[tableIndex] * Level;
+        int gained = ClassicLineScores[tableIndex] * Level;
+        if (hasBomb)
+        {
+            gained *= 2;
+        }
+        Score += gained;
 
         totalLinesCleared += lineCount;
         Level = 1 + totalLinesCleared / LinesPerLevel; // 10줄마다 레벨 +1

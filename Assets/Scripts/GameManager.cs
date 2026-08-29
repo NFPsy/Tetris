@@ -88,10 +88,10 @@ public class GameManager : MonoBehaviour
         {
             LockPiece(activePiece);
 
-            int clearedLines = board.ClearFullLines();
+            int clearedLines = board.ClearFullLines(out bool hadBomb);
             if (clearedLines > 0)
             {
-                scoreManager.AddLines(clearedLines);
+                scoreManager.AddLines(clearedLines, hadBomb);
             }
 
             SpawnPiece();
@@ -103,9 +103,11 @@ public class GameManager : MonoBehaviour
     private void LockPiece(Piece piece)
     {
         Color color = TetrominoShapes.GetColor(piece.type);
-        foreach (Vector2Int cell in piece.GetAbsoluteCells())
+        Vector2Int[] absoluteCells = piece.GetAbsoluteCells();
+        for (int i = 0; i < absoluteCells.Length; i++)
         {
-            board.SetCell(cell.x, cell.y, true, color);
+            // 폭탄 칸은 보드에 폭탄으로 기록해두고, 이 칸이 속한 줄이 삭제될 때 터집니다.
+            board.SetCell(absoluteCells[i].x, absoluteCells[i].y, true, color, piece.IsBombCell(i));
         }
         Destroy(piece.gameObject);
     }

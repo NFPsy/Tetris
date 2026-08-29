@@ -10,10 +10,17 @@ public class Piece : MonoBehaviour
     public TetrominoType type;    // 블록 종류(I, O, T, S, Z, J, L)
     public Vector2Int position;   // 보드 기준 이 블록의 회전축(피벗) 위치
 
+    // 블록 4칸 중 하나가 폭탄일 확률
+    private const float BombChance = 0.15f;
+
     // 현재 회전 상태에서, 피벗을 기준으로 한 4칸의 상대 좌표
     private Vector2Int[] cells;
     // 화면에 보이는 4개의 블록 사각형(스프라이트)
     private SpriteRenderer[] blockRenderers;
+    // 4칸 중 폭탄인 칸의 인덱스(-1이면 폭탄 없음)
+    private int bombCellIndex = -1;
+
+    public bool HasBomb => bombCellIndex >= 0;
 
     // 매 프레임 키 입력을 확인해서 좌우 이동/회전을 처리합니다.
     // (아래로 빨리 떨어뜨리는 소프트 드롭은 GameManager에서 스페이스바로 처리합니다.)
@@ -48,6 +55,9 @@ public class Piece : MonoBehaviour
         position = spawnPosition;
         cells = TetrominoShapes.GetCells(type);
 
+        // 일정 확률로 4칸 중 하나를 폭탄 칸으로 지정합니다.
+        bombCellIndex = Random.value < BombChance ? Random.Range(0, cells.Length) : -1;
+
         blockRenderers = new SpriteRenderer[cells.Length];
         Color color = TetrominoShapes.GetColor(type);
         for (int i = 0; i < cells.Length; i++)
@@ -57,8 +67,9 @@ public class Piece : MonoBehaviour
             // 피벗 기준 상대 좌표를 그대로 자식 오브젝트의 로컬 위치로 사용
             block.transform.localPosition = new Vector3(cells[i].x, cells[i].y, 0);
             SpriteRenderer blockRenderer = block.AddComponent<SpriteRenderer>();
-            blockRenderer.sprite = SquareSprite.Get();
-            blockRenderer.color = color;
+            bool isBomb = i == bombCellIndex;
+            blockRenderer.sprite = isBomb ? BombSprite.Get() : SquareSprite.Get();
+            blockRenderer.color = isBomb ? Color.white : color;
             blockRenderers[i] = blockRenderer;
         }
 
@@ -135,6 +146,12 @@ public class Piece : MonoBehaviour
             absolute[i] = position + cells[i];
         }
         return absolute;
+    }
+
+    // GetAbsoluteCells()가 반환한 배열에서 index번째 칸이 폭탄 칸인지 확인합니다.
+    public bool IsBombCell(int index)
+    {
+        return index == bombCellIndex;
     }
 
     // position 값이 바뀔 때마다 실제 화면 위치(transform.position)를 갱신합니다.

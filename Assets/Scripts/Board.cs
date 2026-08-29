@@ -16,6 +16,10 @@ public class Board : MonoBehaviour
     // [x, y] 위치에 실제로 보이는 블록 스프라이트(없으면 null)
     private SpriteRenderer[,] blockVisuals = new SpriteRenderer[Width, Height];
 
+    // [x, y] 위치의 칸이 폭탄인지 여부. 그 줄이 삭제될 때 점수를 2배로 주는 데 사용됩니다.
+    private bool[,] bombs = new bool[Width, Height];
+
+
     private void Awake()
     {
         // 게임 시작 시 보드 범위를 눈으로 알 수 있게 테두리 선을 그립니다.
@@ -68,7 +72,8 @@ public class Board : MonoBehaviour
 
     // (x, y) 칸을 채우거나 비웁니다. 채울 때는 color로 화면에 보일 블록을 새로 만들고,
     // 비울 때는 화면에 있던 블록 오브젝트를 지웁니다.
-    public void SetCell(int x, int y, bool filled, Color color = default)
+    // isBomb이 true면 이 칸을 폭탄으로 기억해두었다가, 이 칸이 속한 줄이 삭제될 때 점수를 2배로 줍니다.
+    public void SetCell(int x, int y, bool filled, Color color = default, bool isBomb = false)
     {
         if (!IsInsideBoard(x, y))
         {
@@ -76,6 +81,7 @@ public class Board : MonoBehaviour
         }
 
         cells[x, y] = filled;
+        bombs[x, y] = filled && isBomb;
 
         if (filled)
         {
@@ -86,9 +92,9 @@ public class Board : MonoBehaviour
                 block.transform.SetParent(transform, false);
                 block.transform.localPosition = new Vector3(x, y, 0);
                 blockVisuals[x, y] = block.AddComponent<SpriteRenderer>();
-                blockVisuals[x, y].sprite = SquareSprite.Get();
             }
-            blockVisuals[x, y].color = color;
+            blockVisuals[x, y].sprite = isBomb ? BombSprite.Get() : SquareSprite.Get();
+            blockVisuals[x, y].color = isBomb ? Color.white : color;
         }
         else if (blockVisuals[x, y] != null)
         {
@@ -113,19 +119,38 @@ public class Board : MonoBehaviour
     // 가로 한 줄이 전부 채워진 줄들을 찾아서 지우고, 지운 줄 수를 반환합니다.
     // 아래에서 위로 검사하다가 꽉 찬 줄을 지우면, 그 위의 줄들이 한 칸씩 내려오므로
     // 같은 y 위치를 다시 검사해야 합니다(y--).
-    public int ClearFullLines()
+    // hadBomb에는 지워진 줄들 중 폭탄 칸이 하나라도 있었는지가 담깁니다(점수 2배 판정용).
+    public int ClearFullLines(out bool hadBomb)
     {
         int linesCleared = 0;
+        hadBomb = false;
         for (int y = 0; y < Height; y++)
         {
             if (IsRowFull(y))
             {
+                if (RowHasBomb(y))
+                {
+                    hadBomb = true;
+                }
                 RemoveRow(y);
                 linesCleared++;
                 y--; // 위 줄이 내려와서 같은 y를 다시 확인
             }
         }
         return linesCleared;
+    }
+
+    // y번째 줄에 폭탄 칸이 하나라도 있는지 확인
+    private bool RowHasBomb(int y)
+    {
+        for (int x = 0; x < Width; x++)
+        {
+            if (bombs[x, y])
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     // y번째 줄의 모든 칸이 채워져 있는지 확인
@@ -161,6 +186,7 @@ public class Board : MonoBehaviour
             for (int x = 0; x < Width; x++)
             {
                 cells[x, row] = cells[x, row + 1];
+                bombs[x, row] = bombs[x, row + 1];
                 blockVisuals[x, row] = blockVisuals[x, row + 1];
                 if (blockVisuals[x, row] != null)
                 {
@@ -174,6 +200,7 @@ public class Board : MonoBehaviour
         for (int x = 0; x < Width; x++)
         {
             cells[x, Height - 1] = false;
+            bombs[x, Height - 1] = false;
             blockVisuals[x, Height - 1] = null;
         }
     }
