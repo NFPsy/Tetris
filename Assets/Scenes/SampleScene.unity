@@ -119,6 +119,56 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &62445719
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 62445720}
+  - component: {fileID: 62445721}
+  m_Layer: 0
+  m_Name: NextPieceBlockContainer2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &62445720
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62445719}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2001016587}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -50}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &62445721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62445719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09f98a4ea431727488a10b42821e4e91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NextPiecePreview
+  blockContainer: {fileID: 62445720}
+  cellSize: 24
 --- !u!21 &191247123
 Material:
   serializedVersion: 8
@@ -1394,7 +1444,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   board: {fileID: 0}
   scoreManager: {fileID: 0}
-  nextPiecePreview: {fileID: 2001016588}
+  nextPiecePreview: {fileID: 2001016591}
+  nextPiecePreview2: {fileID: 62445721}
   holdPreview: {fileID: 1967800931}
   fallInterval: 1
   softDropInterval: 0.05
@@ -2323,7 +2374,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 20, y: -320}
+  m_AnchoredPosition: {x: 20, y: -420}
   m_SizeDelta: {x: 140, y: 120}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1967800931
@@ -2389,7 +2440,7 @@ GameObject:
   - component: {fileID: 2001016587}
   - component: {fileID: 2001016590}
   - component: {fileID: 2001016589}
-  - component: {fileID: 2001016588}
+  - component: {fileID: 2001016591}
   m_Layer: 0
   m_Name: NextPiecePanel
   m_TagString: Untagged
@@ -2411,27 +2462,14 @@ RectTransform:
   m_Children:
   - {fileID: 1669767483}
   - {fileID: 2070937211}
+  - {fileID: 62445720}
   m_Father: {fileID: 1966885263}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 20, y: -190}
-  m_SizeDelta: {x: 140, y: 120}
+  m_SizeDelta: {x: 140, y: 220}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &2001016588
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2001016586}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 09f98a4ea431727488a10b42821e4e91, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NextPiecePreview
-  blockContainer: {fileID: 2070937211}
-  cellSize: 24
 --- !u!114 &2001016589
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2470,6 +2508,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001016586}
   m_CullTransparentMesh: 1
+--- !u!114 &2001016591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001016586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09f98a4ea431727488a10b42821e4e91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NextPiecePreview
+  blockContainer: {fileID: 2070937211}
+  cellSize: 24
 --- !u!1 &2070937210
 GameObject:
   m_ObjectHideFlags: 0
@@ -2502,7 +2554,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -18}
+  m_AnchoredPosition: {x: 0, y: 50}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1660057539 &9223372036854775807

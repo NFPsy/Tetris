@@ -9,8 +9,12 @@ public class GameManager : MonoBehaviour
 {
     [SerializeField] private Board board;
     [SerializeField] private ScoreManager scoreManager;
-    [SerializeField] private NextPiecePreview nextPiecePreview;
+    [SerializeField] private NextPiecePreview nextPiecePreview;  // NEXT 패널의 첫 번째 칸(바로 다음 블록)
+    [SerializeField] private NextPiecePreview nextPiecePreview2; // NEXT 패널의 두 번째 칸(그다음 블록)
     [SerializeField] private NextPiecePreview holdPreview;
+
+    // 화면에 미리 보여줄 다음 블록 개수
+    private const int NextQueueSize = 2;
     [SerializeField] private float fallInterval = 1f;       // 기본 낙하 간격(초). 값이 작을수록 빨리 떨어짐
     [SerializeField] private float softDropInterval = 0.05f; // 아래쪽 화살표를 누르고 있을 때(소프트 드롭) 낙하 간격
     [SerializeField] private float levelSpeedDecay = 0.92f;  // 레벨이 1 오를 때마다 낙하 간격에 곱하는 비율
@@ -25,7 +29,7 @@ public class GameManager : MonoBehaviour
     public event System.Action<bool> OnPauseChanged;
 
     private Piece activePiece;      // 지금 떨어지고 있는 블록
-    private TetrominoType nextType; // 다음에 나올 블록 종류(미리 뽑아둠 -> 미리보기에 사용)
+    private readonly System.Collections.Generic.List<TetrominoType> nextQueue = new System.Collections.Generic.List<TetrominoType>(); // 앞으로 나올 블록들(미리 뽑아둠 -> 미리보기에 사용)
     private TetrominoType? heldType; // 보관함(Hold)에 들어있는 블록 종류(비어있으면 null)
     private bool canHold = true;     // 지금 블록에 대해 아직 홀드를 사용하지 않았는지(블록당 1회 제한)
     private float fallTimer;        // 마지막으로 떨어진 뒤 지난 시간
@@ -47,8 +51,11 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // 게임 시작 시 "다음 블록"을 미리 하나 뽑아두고, 첫 블록을 스폰합니다.
-        nextType = GetRandomType();
+        // 게임 시작 시 미리보기 개수(NextQueueSize)만큼 "다음 블록"을 미리 뽑아두고, 첫 블록을 스폰합니다.
+        for (int i = 0; i < NextQueueSize; i++)
+        {
+            nextQueue.Add(GetRandomType());
+        }
         SpawnPiece();
     }
 
@@ -226,18 +233,29 @@ public class GameManager : MonoBehaviour
     }
 
     // 새 블록을 보드 위쪽에 스폰합니다.
-    // 미리 뽑아뒀던 "다음 블록"을 이번에 스폰할 블록으로 사용하고,
-    // 그 다음 블록을 새로 뽑아서 미리보기 화면을 갱신합니다.
+    // 큐의 맨 앞 블록을 이번에 스폰할 블록으로 꺼내 쓰고, 큐 끝에 새 블록을 채워 넣은 뒤
+    // NEXT 패널의 미리보기 화면을 갱신합니다.
     private void SpawnPiece()
     {
-        TetrominoType type = nextType;
-        nextType = GetRandomType();
-        if (nextPiecePreview != null)
-        {
-            nextPiecePreview.Show(nextType);
-        }
+        TetrominoType type = nextQueue[0];
+        nextQueue.RemoveAt(0);
+        nextQueue.Add(GetRandomType());
+        UpdateNextPreview();
 
         SpawnPieceOfType(type);
+    }
+
+    // NEXT 패널의 각 칸에 큐에 든 블록들을 순서대로 표시합니다.
+    private void UpdateNextPreview()
+    {
+        if (nextPiecePreview != null)
+        {
+            nextPiecePreview.Show(nextQueue[0]);
+        }
+        if (nextPiecePreview2 != null && nextQueue.Count > 1)
+        {
+            nextPiecePreview2.Show(nextQueue[1]);
+        }
     }
 
     // type 블록을 보드 위쪽에 스폰합니다. "다음 블록" 큐는 건드리지 않으므로,
