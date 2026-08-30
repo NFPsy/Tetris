@@ -10,8 +10,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Board board;
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private NextPiecePreview nextPiecePreview;
+    [SerializeField] private NextPiecePreview holdPreview;
     [SerializeField] private float fallInterval = 1f;       // 기본 낙하 간격(초). 값이 작을수록 빨리 떨어짐
-    [SerializeField] private float softDropInterval = 0.05f; // 스페이스바를 누르고 있을 때(소프트 드롭) 낙하 간격
+    [SerializeField] private float softDropInterval = 0.05f; // 아래쪽 화살표를 누르고 있을 때(소프트 드롭) 낙하 간격
     [SerializeField] private float levelSpeedDecay = 0.92f;  // 레벨이 1 오를 때마다 낙하 간격에 곱하는 비율
     [SerializeField] private float minFallInterval = 0.1f;   // 아무리 레벨이 높아져도 이보다 빨라지지는 않음
 
@@ -25,6 +26,8 @@ public class GameManager : MonoBehaviour
 
     private Piece activePiece;      // 지금 떨어지고 있는 블록
     private TetrominoType nextType; // 다음에 나올 블록 종류(미리 뽑아둠 -> 미리보기에 사용)
+    private TetrominoType? heldType; // 보관함(Hold)에 들어있는 블록 종류(비어있으면 null)
+    private bool canHold = true;     // 지금 블록에 대해 아직 홀드를 사용하지 않았는지(블록당 1회 제한)
     private float fallTimer;        // 마지막으로 떨어진 뒤 지난 시간
     private bool isGameOver;
     private bool isPaused;
@@ -65,13 +68,16 @@ public class GameManager : MonoBehaviour
             return; // 게임이 끝났거나 일시정지 중이면 더 이상 아무것도 하지 않음
         }
 
+        HandleHardDropInput();
+        HandleHoldInput();
+
         // 레벨이 오를수록 낙하 간격이 점점 짧아지도록 계산합니다.
         // 예: 레벨1은 1초, 레벨2는 1*0.92초, 레벨3은 1*0.92*0.92초... 이런 식으로 점점 빨라지되
         // minFallInterval(0.1초) 아래로는 절대 내려가지 않습니다.
         float currentFallInterval = Mathf.Max(minFallInterval, fallInterval * Mathf.Pow(levelSpeedDecay, scoreManager.Level - 1));
 
-        // 스페이스바를 누르고 있으면 훨씬 짧은 간격(소프트 드롭)을 사용합니다.
-        bool softDrop = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+        // 아래쪽 화살표를 누르고 있으면 훨씬 짧은 간격(소프트 드롭)을 사용합니다.
+        bool softDrop = Keyboard.current != null && Keyboard.current.downArrowKey.isPressed;
         float interval = softDrop ? softDropInterval : currentFallInterval;
 
         fallTimer += Time.deltaTime;
@@ -79,6 +85,24 @@ public class GameManager : MonoBehaviour
         {
             fallTimer = 0f;
             StepDown();
+        }
+    }
+
+    // 스페이스바를 누르는 즉시 블록을 바닥까지 떨어뜨려 고정합니다.
+    private void HandleHardDropInput()
+    {
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            HardDrop();
+        }
+    }
+
+    // C키를 누르면 현재 블록을 보관함(Hold)의 블록과 교체합니다. 블록당 1회만 가능합니다.
+    private void HandleHoldInput()
+    {
+        if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+        {
+            HoldPiece();
         }
     }
 
@@ -119,16 +143,72 @@ public class GameManager : MonoBehaviour
 
         if (!activePiece.Move(Vector2Int.down))
         {
-            LockPiece(activePiece);
+            LockActivePieceAndAdvance();
+        }
+    }
 
-            int clearedLines = board.ClearFullLines(out bool hadBomb);
-            if (clearedLines > 0)
-            {
-                scoreManager.AddLines(clearedLines, hadBomb);
-            }
+    // 더 내려갈 수 없을 때까지 한 번에 떨어뜨린 뒤, 그 자리에 즉시 고정합니다.
+    private void HardDrop()
+    {
+        if (activePiece == null)
+        {
+            return;
+        }
 
+        while (activePiece.Move(Vector2Int.down))
+        {
+        }
+
+        LockActivePieceAndAdvance();
+    }
+
+    // 현재 블록을 보드에 고정하고, 줄 삭제 검사와 다음 블록 스폰까지 이어서 처리합니다.
+    // 블록이 고정됐으므로 홀드를 다시 사용할 수 있게 됩니다.
+    private void LockActivePieceAndAdvance()
+    {
+        LockPiece(activePiece);
+        canHold = true;
+
+        int clearedLines = board.ClearFullLines(out bool hadBomb);
+        if (clearedLines > 0)
+        {
+            scoreManager.AddLines(clearedLines, hadBomb);
+        }
+
+        SpawnPiece();
+    }
+
+    // 현재 블록을 보관함(Hold)의 블록과 교체합니다.
+    // 보관함이 비어있으면 현재 블록을 보관하고 "다음 블록"을 새로 스폰합니다.
+    // 보관함에 이미 블록이 있으면 그 블록과 현재 블록을 맞바꿉니다.
+    private void HoldPiece()
+    {
+        if (!canHold || activePiece == null)
+        {
+            return;
+        }
+
+        TetrominoType currentType = activePiece.type;
+        Destroy(activePiece.gameObject);
+        activePiece = null;
+
+        TetrominoType? previousHeldType = heldType;
+        heldType = currentType;
+        if (holdPreview != null)
+        {
+            holdPreview.Show(currentType);
+        }
+
+        if (previousHeldType.HasValue)
+        {
+            SpawnPieceOfType(previousHeldType.Value);
+        }
+        else
+        {
             SpawnPiece();
         }
+
+        canHold = false;
     }
 
     // 떨어지던 블록(piece)을 보드 데이터에 영구히 새겨넣고, 화면에서 그 블록 오브젝트는 지웁니다.
@@ -146,10 +226,10 @@ public class GameManager : MonoBehaviour
     }
 
     // 새 블록을 보드 위쪽에 스폰합니다.
+    // 미리 뽑아뒀던 "다음 블록"을 이번에 스폰할 블록으로 사용하고,
+    // 그 다음 블록을 새로 뽑아서 미리보기 화면을 갱신합니다.
     private void SpawnPiece()
     {
-        // 미리 뽑아뒀던 "다음 블록"을 이번에 스폰할 블록으로 사용하고,
-        // 그 다음 블록을 새로 뽑아서 미리보기 화면을 갱신합니다.
         TetrominoType type = nextType;
         nextType = GetRandomType();
         if (nextPiecePreview != null)
@@ -157,6 +237,13 @@ public class GameManager : MonoBehaviour
             nextPiecePreview.Show(nextType);
         }
 
+        SpawnPieceOfType(type);
+    }
+
+    // type 블록을 보드 위쪽에 스폰합니다. "다음 블록" 큐는 건드리지 않으므로,
+    // 홀드로 보관해둔 블록을 다시 꺼낼 때도 이 함수를 사용합니다.
+    private void SpawnPieceOfType(TetrominoType type)
+    {
         Vector2Int spawnPosition = new Vector2Int(Board.Width / 2 - 1, Board.Height - 2);
 
         // 스폰하려는 자리에 이미 블록이 있다면(=쌓인 블록이 천장까지 닿았다면) 게임 오버입니다.

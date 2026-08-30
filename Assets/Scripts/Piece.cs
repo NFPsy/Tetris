@@ -12,11 +12,15 @@ public class Piece : MonoBehaviour
 
     // 블록 4칸 중 하나가 폭탄일 확률
     private const float BombChance = 0.15f;
+    // 고스트 블록(착지 예상 위치 미리보기)의 투명도
+    private const float GhostAlpha = 0.25f;
 
     // 현재 회전 상태에서, 피벗을 기준으로 한 4칸의 상대 좌표
     private Vector2Int[] cells;
     // 화면에 보이는 4개의 블록 사각형(스프라이트)
     private SpriteRenderer[] blockRenderers;
+    // 바닥에 그대로 떨어졌을 때 도착할 위치를 보여주는 반투명 블록들
+    private SpriteRenderer[] ghostRenderers;
     // 4칸 중 폭탄인 칸의 인덱스(-1이면 폭탄 없음)
     private int bombCellIndex = -1;
 
@@ -59,7 +63,10 @@ public class Piece : MonoBehaviour
         bombCellIndex = Random.value < BombChance ? Random.Range(0, cells.Length) : -1;
 
         blockRenderers = new SpriteRenderer[cells.Length];
+        ghostRenderers = new SpriteRenderer[cells.Length];
         Color color = TetrominoShapes.GetColor(type);
+        Color ghostColor = color;
+        ghostColor.a = GhostAlpha;
         for (int i = 0; i < cells.Length; i++)
         {
             GameObject block = new GameObject("Block");
@@ -71,9 +78,19 @@ public class Piece : MonoBehaviour
             blockRenderer.sprite = isBomb ? BombSprite.Get() : SquareSprite.Get();
             blockRenderer.color = isBomb ? Color.white : color;
             blockRenderers[i] = blockRenderer;
+
+            // 고스트 블록은 항상 일반 사각형 모양으로, 반투명하게 표시합니다.
+            GameObject ghost = new GameObject("Ghost");
+            ghost.transform.SetParent(transform, false);
+            SpriteRenderer ghostRenderer = ghost.AddComponent<SpriteRenderer>();
+            ghostRenderer.sprite = SquareSprite.Get();
+            ghostRenderer.color = ghostColor;
+            ghostRenderer.sortingOrder = -1; // 실제 블록보다 뒤에 그려지도록
+            ghostRenderers[i] = ghostRenderer;
         }
 
         UpdatePosition();
+        UpdateGhost();
     }
 
     // testPosition에 testCells 모양대로 블록을 놓았을 때, 4칸 전부 보드 범위 안에 있고
@@ -104,6 +121,7 @@ public class Piece : MonoBehaviour
         }
         position = newPosition;
         UpdatePosition();
+        UpdateGhost();
         return true;
     }
 
@@ -133,6 +151,7 @@ public class Piece : MonoBehaviour
 
         cells = rotatedCells;
         UpdateBlockShapes();
+        UpdateGhost();
         return true;
     }
 
@@ -166,6 +185,23 @@ public class Piece : MonoBehaviour
         for (int i = 0; i < cells.Length; i++)
         {
             blockRenderers[i].transform.localPosition = new Vector3(cells[i].x, cells[i].y, 0);
+        }
+    }
+
+    // 지금 모양 그대로 곧장 떨어뜨렸을 때 도착할 위치(가장 아래로 내려간 위치)를 계산해서
+    // 고스트 블록들을 그 자리로 옮깁니다. 월드 좌표를 직접 지정하므로 piece 자신의 위치와 무관하게 정확합니다.
+    private void UpdateGhost()
+    {
+        Vector2Int ghostPosition = position;
+        while (IsValidPosition(cells, ghostPosition + Vector2Int.down))
+        {
+            ghostPosition += Vector2Int.down;
+        }
+
+        for (int i = 0; i < cells.Length; i++)
+        {
+            ghostRenderers[i].transform.position = board.transform.position
+                + new Vector3(ghostPosition.x + cells[i].x, ghostPosition.y + cells[i].y, 0);
         }
     }
 }
