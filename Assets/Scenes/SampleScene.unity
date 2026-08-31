@@ -2255,6 +2255,7 @@ GameObject:
   - component: {fileID: 1966885262}
   - component: {fileID: 1966885261}
   - component: {fileID: 1966885260}
+  - component: {fileID: 1966885264}
   m_Layer: 0
   m_Name: Canvas
   m_TagString: Untagged
@@ -2351,6 +2352,24 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1966885264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1966885259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4076a8d8679b347804ee94e4f72723, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SidePanelLayout
+  targetCamera: {fileID: 519420031}
+  board: {fileID: 1205428896}
+  canvasRect: {fileID: 1966885263}
+  holdPanel: {fileID: 1967800930}
+  nextPanel: {fileID: 2001016587}
+  gap: 20
 --- !u!1 &1967800929
 GameObject:
   m_ObjectHideFlags: 0
@@ -2388,7 +2407,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 20, y: -420}
+  m_AnchoredPosition: {x: 20, y: -20}
   m_SizeDelta: {x: 140, y: 120}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1967800931
@@ -2481,7 +2500,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 20, y: -190}
+  m_AnchoredPosition: {x: 20, y: -20}
   m_SizeDelta: {x: 140, y: 220}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2001016589
